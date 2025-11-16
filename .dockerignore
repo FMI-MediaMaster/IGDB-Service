@@ -1,0 +1,12 @@
+node_modules
+bruno
+dist
+.env
+.envrc
+.devbox
+.devbox.lock
+.dockerignore
+Dockerfile
+tsconfig.tsbuildinfo
+.git
+.gitignore
