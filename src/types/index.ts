@@ -1,1 +1,1 @@
-export * from './users.types';
+export * from './igdb.types';

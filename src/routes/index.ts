@@ -1,10 +1,8 @@
-import userController from '@controllers/user';
 import { Router } from 'express';
-import { createRouter } from '@media-master/express-crud-router';
+import igdbController from '@controllers/igdb';
 
 const routes: Router = Router();
 
-routes.use('/users', createRouter(userController));
+routes.use('/:method', igdbController.handler);
 
 export default routes;
-
