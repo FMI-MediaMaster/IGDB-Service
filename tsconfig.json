@@ -17,6 +17,7 @@
       "@routes": ["src/routes/index"],
       "@schemas/*": ["src/schemas/*"],
       "@services/*": ["src/services/*"],
+      "@prototypes": ["src/prototypes/index"],
       "@controllers/*": ["src/controllers/*"]
     }
   },

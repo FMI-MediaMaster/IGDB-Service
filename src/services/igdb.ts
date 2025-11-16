@@ -1,3 +1,4 @@
+import '@prototypes';
 import fetch from 'node-fetch';
 import errors from '@media-master/http-errors';
 import config from '@media-master/load-dotenv';
@@ -5,6 +6,7 @@ import {
     Query,
     OptionsSearchResponse,
     MediaOption,
+    SimilarGamesResponse,
 } from '@types';
 
 export default class IgdbService {
@@ -41,39 +43,6 @@ export default class IgdbService {
         }
     };
 
-    private toAscii = (str: string): string => {
-        return str
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .replace(/[^\p{ASCII}]/gu, '')
-    };
-
-    private toRoman = (num: number): string => {
-        const romanValues: Record<string, number> = {
-            M: 1000,
-            CM: 900,
-            D: 500,
-            CD: 400,
-            C: 100,
-            XC: 90,
-            L: 50,
-            XL: 40,
-            X: 10,
-            IX: 9,
-            V: 5,
-            IV: 4,
-            I: 1
-        };
-        let roman = '';
-        for (const key in romanValues) {
-            while (num >= romanValues[key]) {
-                roman += key;
-                num -= romanValues[key];
-            }
-        }
-        return roman;
-    }
-
     private request = async <T>(
         endpoint: string,
         {
@@ -98,7 +67,7 @@ export default class IgdbService {
         return gameName
             .replaceAll(':', '')
             .split(' ')
-            .every(word => this.toAscii(name.toLowerCase()).includes(this.toAscii(word.toLowerCase())));
+            .every(word => name.toLowerCase().toASCII().includes(word.toLowerCase().toASCII()));
     };
 
     private filterGames = (games: OptionsSearchResponse[], gameName: string): OptionsSearchResponse[] => {
@@ -107,10 +76,21 @@ export default class IgdbService {
             .filter(game => this.containsAllWords(game.name, gameName));
     };
 
+    private mapGame = (game: OptionsSearchResponse): MediaOption => {
+        const updatedGame: MediaOption = {
+            id: game.id.toString(),
+            name: Buffer.from(game.name, 'utf8').toString(),
+        };
+        if (game.first_release_date) {
+            const releaseDate = new Date(game.first_release_date * 1000);
+            updatedGame.name += ` (${releaseDate.getUTCFullYear()})`;
+        }
+        return updatedGame;
+    };
 
     private getOptions = async (name: string): Promise<MediaOption[]> => {
         const accessToken = await this.getAccessToken();
-        let games = await this.request<OptionsSearchResponse[]>(
+        const games = await this.request<OptionsSearchResponse[]>(
             'games',
             {
                 headers: this.authHeaders(accessToken),
@@ -119,31 +99,15 @@ export default class IgdbService {
         );
         if (!games) return [];
 
-        games = this.filterGames(games, name);
-        const updatedGames: MediaOption[] = [];
-        for (const game of games) {
-            const updatedGame: MediaOption = {
-                id: game.id.toString(),
-                name: Buffer.from(game.name, 'utf8').toString(),
-            };
-            if (game.first_release_date) {
-                const releaseDate = new Date(game.first_release_date * 1000);
-                updatedGame.name += ` (${releaseDate.getUTCFullYear()})`;
-            }
+        const updatedGames = this.filterGames(games, name).map(this.mapGame);
 
-            updatedGames.push(updatedGame);
-        }
-
-        // If the game at least one number, turn the first one into roman and search again
+        // If the game name has at least one number, turn the first one into roman and search again
         const match = name.match(/(\d+)$/);
         if (match) {
             const numberString = match[1];
-            const roman = this.toRoman(parseInt(numberString, 10));
+            const roman = parseInt(numberString, 10).toRoman();
 
-            if (roman) {
-                const extraGames: MediaOption[] = await this.getOptions(name.replace(numberString, roman));
-                updatedGames.push(...extraGames);
-            }
+            if (roman) updatedGames.push(...(await this.getOptions(name.replace(numberString, roman))));
         }
 
         return updatedGames;
@@ -153,8 +117,28 @@ export default class IgdbService {
         return {};
     };
 
-    private getRecommendations = async (id: string): Promise<Record<string, string>[]> => {
-        return [];
+    private getRecommendations = async (id: string): Promise<MediaOption[]> => {
+        const accessToken = await this.getAccessToken();
+        const response = await this.request<SimilarGamesResponse[]>(
+            'games',
+            {
+                headers: this.authHeaders(accessToken),
+                body: `fields similar_games; where id = ${id};`,
+            }
+        );
+        if (!response || response.length === 0) return [];
+
+        const ids: string = response[0]['similar_games'].map(gameId => gameId.toString()).join(',');
+        const similarGames = await this.request<OptionsSearchResponse[]>(
+            'games',
+            {
+                headers: this.authHeaders(accessToken),
+                body: `fields id,first_release_date,name; where id = (${ids}) & version_parent = null & parent_game = null;`,
+            }
+        );
+        if (!similarGames) return [];
+
+        return similarGames.map(this.mapGame);
     };
 
     public handle = async (method: string, query: Query): Promise<unknown> => {
