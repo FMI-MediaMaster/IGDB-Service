@@ -1,0 +1,6 @@
+export const toASCII = (str: string): string => {
+    return str
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^\p{ASCII}]/gu, '')
+};

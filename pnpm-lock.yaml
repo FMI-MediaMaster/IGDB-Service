@@ -18,8 +18,8 @@ importers:
         specifier: ^1.0.0
         version: 1.0.0
       '@media-master/metadata-service-tests':
-        specifier: ^1.0.0
-        version: 1.0.0
+        specifier: ^1.0.1
+        version: 1.0.1
       chalk:
         specifier: ^5.6.2
         version: 5.6.2
@@ -368,8 +368,8 @@ packages:
   '@media-master/load-dotenv@1.0.0':
     resolution: {integrity: sha512-W7twWl6q/Br18G/P7rUX1I6OD+4t0SXwL6gb49E4Tc1xWv/iUAQHtg9LCViukHDH0930kFs6hzgnLBwRqElHAA==}
 
-  '@media-master/metadata-service-tests@1.0.0':
-    resolution: {integrity: sha512-aPeyv2wZoYsMbdoxo0o4rSlZMp95ikRrbYPogGc51znhG6MUoaf+uwjd7S3Hp/ZmKgBdIy4G+U8sKC3hFPUIfQ==}
+  '@media-master/metadata-service-tests@1.0.1':
+    resolution: {integrity: sha512-DqOSyewtLTwHfKlFhb6Zg4/uo+ofTFSL2UTSSGFNdzXqFi02T4v0zV2XgU8uAp6oLTcCaT66x6lLN49gLdhgWw==}
 
   '@noble/hashes@1.8.0':
     resolution: {integrity: sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==}
@@ -2191,7 +2191,7 @@ snapshots:
     dependencies:
       dotenv: 17.2.3
 
-  '@media-master/metadata-service-tests@1.0.0': {}
+  '@media-master/metadata-service-tests@1.0.1': {}
 
   '@noble/hashes@1.8.0': {}
 

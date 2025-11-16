@@ -1,11 +1,5 @@
-declare global {
-    interface Number {
-        toRoman(): string;
-    }
-}
-
-Number.prototype.toRoman = function (): string {
-    let num = Math.floor(this.valueOf());
+export const toRoman = (n: number): string => {
+    let num = Math.floor(n);
     if (num <= 0) return '';
 
     const romanValues: Record<string, number> = {
@@ -31,6 +25,6 @@ Number.prototype.toRoman = function (): string {
         }
     }
     return roman;
-}
+};
 
-export {};
+export const unixSecondsToDate = (seconds: number) => new Date(seconds * 1000);
