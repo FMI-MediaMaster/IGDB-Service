@@ -39,7 +39,9 @@ jobs:
 
       - name: Generate .env from .env.example
         shell: bash
-        # env: Add variables for .env
+        env:
+          IGDB_ID: ${{ secrets.IGDB_ID }}
+          IGDB_SECRET: ${{ secrets.IGDB_SECRET }}
         run: |
           > .env
 
