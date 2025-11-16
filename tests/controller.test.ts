@@ -22,6 +22,10 @@ describe('Controller', () => {
             id: { type: 'string' },
             name: { type: 'string' },
         },
+        recommendations: {
+            id: { type: 'string' },
+            name: { type: 'string' },
+        },
     };
     runMetadataTests(
         server,
