@@ -2,6 +2,7 @@ import fetch from 'node-fetch';
 import errors from '@media-master/http-errors';
 import config from '@media-master/load-dotenv';
 import {
+    delay,
     toASCII,
     toRoman,
     unixSecondsToDate,
@@ -28,7 +29,7 @@ export default class IgdbService {
             'client_secret': config.IGDB_SECRET,
             'grant_type': 'client_credentials'
         };
-    }
+    };
 
     private authHeaders = (accessToken: string): Record<string, string> => {
         return {
@@ -101,10 +102,10 @@ export default class IgdbService {
         const getURL = (u: IGDBLink) => `https:${u.url.replace('thumb', 'original')}`;
         const getField = <T, K extends keyof T>(field: K) => (x: T | string): T[K] | string => {
             if (typeof x === 'object' && x !== null && field in x) {
-                return x[field as K];
+                return x[field];
             }
             if (typeof x === 'string') return x;
-            return ''
+            return '';
         };
         const getCompanies = (role: 'developer' | 'publisher') => {
             return (game.involved_companies as IGDBCompany[])
@@ -125,7 +126,7 @@ export default class IgdbService {
             fields,
             where = '',
             key = undefined,
-            transform = (items: T[] | undefined) => items as unknown as MediaInfo[K],
+            transform = (items: T[] | undefined) => items as MediaInfo[K],
         }: {
             endpoint: string;
             fields: string[];
@@ -164,55 +165,58 @@ export default class IgdbService {
         if (game.franchise) game.franchises!.push(game.franchise);
 
         // first fetch
-        await Promise.all([
-            fetchAndSet<{ url: string }>({
+        const tasks = [
+            async () => fetchAndSet<{ url: string }>({
                 endpoint: 'artworks',
                 fields: ['url'],
                 where: `where id = ${joinOn('artworks')};`,
                 transform: arr => arr?.map(getURL),
             }),
-            fetchAndSet<{ url: string }>({
+            async () => fetchAndSet<{ url: string }>({
                 endpoint: 'covers',
                 fields: ['url'],
                 where: `where id = ${game['cover']};`,
                 key: 'cover',
                 transform: arr => arr ? getURL(arr[0]) : '',
             }),
-            fetchAndSet({
+            async () => fetchAndSet({
                 endpoint: 'websites',
                 fields: ['url', 'type'],
                 where: `where game = ${game['id']};`,
             }),
-            fetchAndSet({
+            async () => fetchAndSet({
                 endpoint: 'involved_companies',
                 fields: ['company', 'developer', 'publisher'],
                 where: `where id = ${joinOn('involved_companies')} & (developer = true | publisher = true);`,
             }),
-            fetchAndSet({
+            async () => fetchAndSet({
                 endpoint: 'genres',
                 fields: ['name'],
                 where: `where id = ${joinOn('genres')};`,
                 transform: arr => arr?.map(getField('name')),
             }),
-            fetchAndSet({
+            async () => fetchAndSet({
                 endpoint: 'platforms',
                 fields: ['name'],
                 where: `where id = ${joinOn('platforms')};`,
                 transform: arr => arr?.map(getField('name')),
             }),
-            fetchAndSet({
+            async () => fetchAndSet({
                 endpoint: 'collections',
                 fields: ['name'],
                 where: `where id = ${joinOn('collections')};`,
                 transform: arr => arr?.map(getField('name')) ?? [],
             }),
-            fetchAndSet({
+            async () => fetchAndSet({
                 endpoint: 'franchises',
                 fields: ['name'],
                 where: `where id = ${joinOn('franchises')};`,
                 transform: arr => arr?.map(getField('name')) ?? [],
             }),
-        ]);
+        ];
+        await Promise.all(
+            tasks.map((task, i) => delay(i * 500).then(task))
+        );
         game = {
             ...game,
             series: [...game.franchises!.map(String), ...game.collections!.map(String)],
