@@ -83,4 +83,4 @@ jobs:
       - name: Test server
         if: steps.check_tests.outputs.run_tests == 'true'
         shell: bash
-        run: pnpm run test
+        run: pnpm run test:coverage
