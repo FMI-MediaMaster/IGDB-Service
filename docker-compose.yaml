@@ -1,0 +1,17 @@
+services:
+  igdb-service:
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: igdb-service:latest
+    hostname: igdb-service.mediamaster.internal
+    container_name: igdb-service.mediamaster.internal
+    volumes:
+      - ./.env:/app/.env:ro
+    networks:
+      - mediamaster-internal-network
+
+networks:
+  mediamaster-internal-network:
+    name: mediamaster-internal-network

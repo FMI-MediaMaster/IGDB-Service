@@ -15,7 +15,8 @@
       "if ! diff -q <(fixjson devbox.json) devbox.json >/dev/null 2>&1; then fixjson -w devbox.json; fi",
       "pnpm install",
       "git remote get-url $TEMPLATE_NAME >/dev/null 2>&1 || git remote add -f $TEMPLATE_NAME https://github.com/FMI-MediaMaster/ServerTemplate.git",
-      "export SERVICE_NAME=$(basename -s .git \"$(git config --get remote.origin.url)\" | tr '[:upper:]' '[:lower:]')"
+      "export SERVICE_NAME=$(basename -s .git \"$(git config --get remote.origin.url)\" | tr '[:upper:]' '[:lower:]')",
+      "if [ \"$SERVICE_NAME\" != \"$TEMPLATE_NAME\" ]; then grep -q '<NAME>' docker-compose.yaml && sed -i \"s|<NAME>|$SERVICE_NAME|g\" docker-compose.yaml; fi"
     ],
     "scripts": {
       "bruno": "nohup bruno >/dev/null 2>&1 &",
